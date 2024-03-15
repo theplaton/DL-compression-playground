@@ -1,68 +1,62 @@
-#!/usr/bin/env python
-# coding: utf-8
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import time
+import os
+import json
+from torchvision import transforms, datasets
+import torch
+from torchvision import datasets, transforms
+import os
+from PIL import Image
+from torch.utils.data import Dataset, DataLoader, random_split
+from torchvision import transforms
+from VAE import VAE
+from data_loader import generate_data_loaders
 
-# In[1]:
-def divide_by_256(x):
-        return x / 256
+
+def read_configs():
+    # Specify the path to your JSON file
+    json_file_path = './config.json'
+
+    # Read the JSON file into a dictionary
+    with open(json_file_path, 'r') as file:
+        data = json.load(file)
+        
+    return data
+
+
+def resolve_device():
+    # Check for CUDA and MPS availability
+    use_cuda = torch.cuda.is_available()
+    use_mps = torch.backends.mps.is_available()
+
+    # Set the device based on availability
+    if use_cuda:
+        device = torch.device("cuda")
+    elif use_mps:
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
+
+    # Print the selected device
+    print(f"Using device: {device}")
+    
+    return device
+
+
 if __name__ == '__main__':
 
-    import torch
-    import torch.nn as nn
-    import torch.nn.functional as F
-    from tqdm import tqdm
-    import time
-    import os
-    from torchvision import transforms, datasets
-    from torch.utils.data import DataLoader
-    import torch
-    from torchvision import datasets, transforms
-    from torch.utils.data import DataLoader
-    import os
-    from PIL import Image
-    from torch.utils.data import Dataset, DataLoader, random_split
-    from torchvision import transforms
-    from VAE import VAE
-    
-    
-    # In[2]:
-    batch_size = 32
-    
-    torch.cuda.is_available()
-    device = torch.device("cuda")
-    print(device)
-    
-    
-    # In[9]:
+    device = resolve_device()
     
     ################################################################################
     #####################  CREATING DATA LOADERS  ##################################
     ################################################################################
-    from ImageLoader import CustomImageDataset
-    
-    # Define a custom transformation that divides each pixel by 256
 
-    
-    #Define a transform to resize the images, convert them to tensors, and scale to [0, 1]
-    transform = transforms.Compose([
-        # transforms.Resize((144, 158)),
-        transforms.ToTensor(),
-        transforms.Lambda(divide_by_256)           # Divide each pixel by 256
-    ])
-    
-    # Create the dataset
-    #train_loader, test_loader = generate_data_loaders('/Users/Nate/Documents/cs583/midterm/data/img_align_celeba/img_align_celeba')
-    dataset = CustomImageDataset(root_dir='/Users/Nate/Documents/cs583/midterm/data/img_align_celeba/img_align_celeba', transform = transform)
-    print("Dataset loaded")
-    # Split the dataset into train and test sets
-    train_size = int(0.8 * len(dataset))
-    test_size = len(dataset) - train_size
-    train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
-    
-    # Create DataLoaders for training and testing
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=8)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=8)
-    #train_loader, test_loader = generate_data_loaders('/Users/Nate/Documents/cs583/midterm/data/img_align_celeba/img_align_celeba')
-    
+    config = read_configs()
+    batch_size = 32
+    # Get datases
+    train_loader, test_loader = generate_data_loaders(config['data_path'], batch_size)
     
     ################################################################################
     ##############################  TRAINING  ######################################
@@ -81,10 +75,6 @@ if __name__ == '__main__':
     log_interval = 1
     print("Starting training....")
     # Training loop
-    
-    
-    # In[ ]:
-    
     
     start_time = time.time()
     current_epoch = 0
@@ -136,16 +126,3 @@ if __name__ == '__main__':
                 val_loss += loss.item()
     
         print(f'Epoch: {epoch} \tTraining Loss: {train_loss / len(train_loader):.6f} \tValidation Loss: {val_loss / len(test_loader):.6f}')
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
