@@ -1,1 +1,1 @@
-# DL-compression-playground
+# CIS-583 FaceGen Project
