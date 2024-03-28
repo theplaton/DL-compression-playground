@@ -5,8 +5,8 @@ import os
 from torch.utils.data import Dataset
 
 
-def divide_by_256(x):
-    return x / 256
+# def divide_by_255(x): -- unneeded
+#     return x / 255
 
 class CustomImageDataset(Dataset):
     def __init__(self, root_dir, transform):
@@ -44,7 +44,7 @@ def generate_data_loaders(path, batch_size, split_ratio=0.8, num_workers=8, shuf
     # Define your transformation pipeline
     transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Lambda(divide_by_256)  # scale to 0-1 range
+        #transforms.Lambda(divide_by_255)  # scale to 0-1 range ---- ToTensor already does this 
     ])
 
     # Create the dataset
@@ -56,8 +56,10 @@ def generate_data_loaders(path, batch_size, split_ratio=0.8, num_workers=8, shuf
     train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
 
     # Create DataLoaders for training and testing with multiple workers
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=True, num_workers=num_workers)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers)
+    print(f"Training set size: {len(train_dataset)}")
+    print(f"Batch size: {batch_size}")
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle,  pin_memory=True, num_workers=num_workers)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=True, num_workers=num_workers)
     
     return train_loader, test_loader
 

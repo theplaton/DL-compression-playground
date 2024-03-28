@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
     config = read_configs()
     batch_size = 32
-    # Get datases
+    # Get dataset
     train_loader, test_loader = generate_data_loaders(config['data_path'], batch_size)
     
     ################################################################################
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     vae = VAE(image_channels=3, latent_dim=128)
     vae.to(device)
     
-    num_epochs = 10
+    num_epochs = 3
     optimizer = torch.optim.Adam(vae.parameters(), lr=1e-3)
     def loss_function(recon_x, x, mu, log_var):
         BCE = F.binary_cross_entropy(recon_x, x, reduction='sum')
@@ -100,7 +100,7 @@ if __name__ == '__main__':
             remaining_batches = total_batches - batches_processed
             total_remaining_batches = remaining_epochs * total_batches + remaining_batches
             total_remaining_time = total_remaining_batches / processing_rate
-            print(f"Current loss: {train_loss / (batch_idx+1):8.4f}, Remaining time (s): {total_remaining_time:8.2f}, Remaining batches: {total_remaining_batches:5d}, Remaining_images: {total_remaining_batches*32:5d}, Processing_rate: {processing_rate:6.2f}, BatchID: {batch_idx}", end="\r")
+            #print(f"Current loss: {train_loss / (batch_idx+1):8.4f}, Remaining time (s): {total_remaining_time:8.2f}, Remaining batches: {total_remaining_batches:5d}, Remaining_images: {total_remaining_batches*32:5d}, Processing_rate: {processing_rate:6.2f}, BatchID: {batch_idx}", end="\r")
         ################################################################################
             
             # data = data * 2 - 1  # Rescale images from [0, 1] to [-1, 1]
@@ -110,9 +110,10 @@ if __name__ == '__main__':
             loss.backward()
             optimizer.step()
             train_loss += loss.item()
-            #print(f'batch: {batch_idx} \t{len(train_loader)}')
+            #print(f'batch: {batch_idx} \t{len(train_loader)}')d
             #train_progress_bar.set_description(f"Epoch {epoch+1}/{num_epochs}, Train Loss: {train_loss / (batch_idx+1):.6f}")
-            #print(f"Current loss: {train_loss / (batch_idx+1)}, Remaining time (s): {remaining_time}", end="\r")
+            #print(f"Epoch: {epoch}, Current loss: {train_loss / (batch_idx+1)}", end="\r")
+            print(f'Epoch: {epoch} \tTraining Loss: {train_loss / (batch_idx+1):.6f}',end="\r")
         
         # Validation
         vae.eval()
@@ -126,3 +127,6 @@ if __name__ == '__main__':
                 val_loss += loss.item()
     
         print(f'Epoch: {epoch} \tTraining Loss: {train_loss / len(train_loader):.6f} \tValidation Loss: {val_loss / len(test_loader):.6f}')
+    torch.save(vae, 'cnn_vae_model.pth')
+    end_time = time.time()
+    print(f"Training finished. Total training time in minutes: {((end_time-start_time) / 60):1.2f}", end="\r")
